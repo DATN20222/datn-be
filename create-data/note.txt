@@ -1,0 +1,10 @@
+- Chạy rabbitmq: 
+    cd creat-data
+    docker-compose up
+- Chạy code BE:
+chỉnh file dev.config.yaml: 
+    npm install
+    npm start
+- Chạy mongodb:
+    cd data
+    docker-compose up

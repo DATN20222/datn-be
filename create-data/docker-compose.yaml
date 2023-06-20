@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+  rabbitmq:
+    container_name: same-rabbit
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    volumes:
+      - '/Users/quynh/Documents/PROJECT/datn-be/create-data/rabbitmq/:/var/lib/rabbitmq'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    image: 'rabbitmq:3-management'
+  mongodb:
+    image: mongo:5.0
+    ports:
+      - 27019:27017
+    volumes:
+      - ~/apps/mongo:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=boffice
+      - MONGO_INITDB_ROOT_PASSWORD=boffice_admin
