@@ -70,4 +70,10 @@ export class UsersController {
   getUserByCode(@Param('code') code: number){
     return this.usersService.getOneByCode(code);
   }
+
+  @Get('/byid/:id')
+  @ApiBearerAuth()
+  getUserById(@Param('id') id: string){
+    return this.usersService.getOneById(id);
+  }
 }

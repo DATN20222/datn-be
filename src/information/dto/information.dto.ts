@@ -10,4 +10,5 @@ export class InformationDto {
   type: number;
   code: number;
   userId: number;
+  position: string;
 }

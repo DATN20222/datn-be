@@ -37,6 +37,9 @@ export class Information extends Document {
 
   @Prop()
   userId: number;
+
+  @Prop()
+  position: string;
 }
 
 export const InformationSchema = SchemaFactory.createForClass(Information);
