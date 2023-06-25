@@ -37,3 +37,8 @@ lerna-debug.log*
 # Env python
 .venv
 
+#rabbit mq
+/create-data
+/data
+/rabbitmq
+
