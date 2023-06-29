@@ -27,7 +27,7 @@ export class UsersService {
   }
 
   async getOneById(id: string) {
-    return Optional.ofNullable(await this.userModel.findById(id).lean().exec());
+    return await this.userModel.findById(id).exec();
   }
 
   async getOneByCode(code: number) {
@@ -80,6 +80,10 @@ export class UsersService {
 
   async getAllUser() {
     return this.userModel.find().select('-password -otp -otpExpired').exec();
+  }
+
+  async delVectorsInDayUser() {
+    await this.userModel.updateMany({ }, {vectors: []}).exec();
   }
 
   convertBase64ToVector(encodedString){
@@ -190,7 +194,7 @@ export class UsersService {
   async checkMapUser(oldVector: string, newVectorDecode: number[]){
     const oldVectorDecode = this.convertBase64ToVector(oldVector);
     const score = cosineSimilarity(oldVectorDecode, newVectorDecode);
-    return (score > 0.4);
+    return (score < 0.35);
   }
 
 
