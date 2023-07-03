@@ -23,7 +23,7 @@ export class RabbitmqController implements OnApplicationBootstrap {
     private readonly rabbitmqService: RabbitmqService,
     @Inject('RABBITMQ_SERVICE') private client: ClientProxy,
     @Inject('RABBITMQ_SERVICE2') private client1: ClientProxy,
-  ) {}
+  ) { }
   async onApplicationBootstrap() {
     await this.client.connect();
     await this.client1.connect();
@@ -32,7 +32,7 @@ export class RabbitmqController implements OnApplicationBootstrap {
   @MessagePattern()
   async getNotifications(@Payload() data: any, @Ctx() context: RmqContext) {
     const jsonData = JSON.parse(JSON.stringify(data));
-
+    console.log(jsonData);
     await this.rabbitmqService.save(
       jsonData['ip'],
       jsonData,

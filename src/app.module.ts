@@ -34,7 +34,7 @@ import { StorageModule } from './storage/storage.module';
     }),
     AMQPModule.forRoot({
       name: 'rabbitmq',
-      hostname: 'localhost',
+      hostname: '34.124.151.237',
       port: 5672,
       username: 'admin',
       password: 'admin',
@@ -82,4 +82,4 @@ import { StorageModule } from './storage/storage.module';
     { provide: APP_PIPE, useClass: ValidationPipe },
   ],
 })
-export class AppModule {}
+export class AppModule { }
