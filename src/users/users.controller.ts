@@ -20,6 +20,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { CurrentUser } from '../auth/whoami.decorator';
 import { User } from './entities/user.entity';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateVectorUser } from './dto/update-vector.dto';
 
 @Controller('accounts')
 @ApiTags('Account Resource')
@@ -75,5 +76,11 @@ export class UsersController {
   @ApiBearerAuth()
   getUserById(@Param('id') id: string){
     return this.usersService.getOneById(id);
+  }
+
+  @Patch('/update-vector/:id')
+  @ApiBearerAuth()
+  updateVector(@Param('id') id: string, @Body() body: UpdateVectorUser){
+    return this.usersService.updateVectorByUser(body);
   }
 }

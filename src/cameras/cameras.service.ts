@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 // import { Type } from 'class-transformer';
 import { Model, Types } from 'mongoose';
@@ -16,12 +16,13 @@ import { CheckInEntity } from './entities/checkin.entity';
 
 @Injectable()
 export class CamerasService {
+  
   constructor(
     @InjectModel(Camera.name)
     private readonly cameraModel: Model<Camera>,
-    private userService: UsersService,
-  )
-  {}
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
+  ) {}
   async create(createCameraDto: CameraDto) {
     // const camera = new this.cameraModel(createCameraDto);
     if (
@@ -41,7 +42,7 @@ export class CamerasService {
   }
 
   async findAll() {
-    return await this.cameraModel.find().exec();
+    return await this.cameraModel.find().select('-event -checkIn').exec();
   }
 
   async findOne(id: string) {
@@ -90,41 +91,55 @@ export class CamerasService {
     updateCameraDto.timeStamp = new Date();
     let camera = await this.findOneByIp(ip);
     if (updateCameraDto.type == 1) {
-      
       const eventId = new Types.ObjectId();
       if (camera != null && camera != undefined) {
         // camera.event.push({ ...updateCameraDto, _id: eventId } as Information);
         if (image != null && image.length != 0) {
-          const {type, ...rest} = updateCameraDto;
-          console.log(rest);
+          const { type, ...rest } = updateCameraDto;
           camera.image = image;
-          camera.event.push({...rest} as Environment);
+          camera.temperature = rest.temperature;
+          camera.humidity = rest.humidity;
+          camera.ppm = rest.ppm;
+          camera.event.push({ ...rest } as Environment);
         }
       }
       return await camera.save();
     } else if (updateCameraDto.type == 3) {
       let user = await this.userService.getOneByCode(updateCameraDto.code);
-      if (user != null && user != undefined){
+      if (user != null && user != undefined) {
         // user.vector.push(updateCameraDto.vector);
-        if (camera != null && camera != undefined){
-          camera.checkIn.push({userId: user._id, timeStamp: updateCameraDto.timeStamp} as CheckInEntity);
+        if (camera != null && camera != undefined) {
+          camera.checkIn.push({
+            userId: user._id,
+            timeStamp: updateCameraDto.timeStamp,
+          } as CheckInEntity);
           await camera.save();
         }
-        return await this.userService.updateVector({cameraId: ip, userId: updateCameraDto.userId, vector: updateCameraDto.vector }, user._id); 
+        return await this.userService.updateVector(
+          {
+            cameraId: ip,
+            userId: updateCameraDto.userId,
+            vector: updateCameraDto.vector,
+          },
+          user._id,
+        );
         // return await user.save();
       }
     } else if (updateCameraDto.type == 2) {
-      
       if (camera != null && camera != undefined) {
         // camera.event.push({ ...updateCameraDto, _id: eventId } as Environment);
         // if (image != null && image.length != 0) camera.image = image;
-        return await this.userService.updateVectorUser( updateCameraDto.vector, ip, updateCameraDto.userId, updateCameraDto.timeStamp);
+        return await this.userService.updateVectorUser(
+          updateCameraDto.vector,
+          ip,
+          updateCameraDto.userId,
+          updateCameraDto.timeStamp,
+        );
       }
     }
   }
 
- 
-  convertBase64ToVector(encodedString){
+  convertBase64ToVector(encodedString) {
     let binary_string = atob(encodedString);
     let buffer = new ArrayBuffer(binary_string.length);
     let bytes_buffer = new Uint8Array(buffer);
@@ -133,24 +148,24 @@ export class CamerasService {
       bytes_buffer[i] = binary_string.charCodeAt(i);
     }
 
-   let values = new Float64Array(buffer);
-   return Array.from(values); 
+    let values = new Float64Array(buffer);
+    return Array.from(values);
   }
 
- cosineSimilarity(emb1, emb2) {
-  const dotProduct = emb1.reduce(
-    (sum, value, index) => sum + value * emb2[index],
-    0,
-  );
-  const normEmb1 = Math.sqrt(
-    emb1.reduce((sum, value) => sum + value ** 2, 0),
-  );
-  const normEmb2 = Math.sqrt(
-    emb2.reduce((sum, value) => sum + value ** 2, 0),
-  );
+  cosineSimilarity(emb1, emb2) {
+    const dotProduct = emb1.reduce(
+      (sum, value, index) => sum + value * emb2[index],
+      0,
+    );
+    const normEmb1 = Math.sqrt(
+      emb1.reduce((sum, value) => sum + value ** 2, 0),
+    );
+    const normEmb2 = Math.sqrt(
+      emb2.reduce((sum, value) => sum + value ** 2, 0),
+    );
 
-  return (1 - dotProduct / (normEmb1 * normEmb2)) / 2;
-}
+    return (1 - dotProduct / (normEmb1 * normEmb2)) / 2;
+  }
 
   async remove(id: string) {
     return await this.cameraModel.findByIdAndDelete(id).exec();
@@ -255,24 +270,34 @@ export class CamerasService {
   }
   base64ToArrayBuffer(base64) {
     var binaryString = atob(base64);
-    var fLen	= binaryString.length / Float32Array.BYTES_PER_ELEMENT;
-    var dView	= new DataView( new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT) );
-    var fAry	= new Float32Array(fLen);
-    // var bytes = new Float32Array(binaryString.length);
-    // for (var i = 0; i < binaryString.length; i++) {
-    //     bytes[i] = binaryString.charCodeAt(i);
-    // }
-    var p		= 0;																// Position
+    var fLen = binaryString.length / Float32Array.BYTES_PER_ELEMENT;
+    var dView = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
+    var fAry = new Float32Array(fLen);
+    var p = 0; // Position
 
-for(var j=0; j < fLen; j++){
-	p = j * 4;
-	dView.setUint8(0,binaryString.charCodeAt(p));
-	dView.setUint8(1,binaryString.charCodeAt(p+1));
-	dView.setUint8(2,binaryString.charCodeAt(p+2));
-	dView.setUint8(3,binaryString.charCodeAt(p+3));
-	fAry[j] = dView.getFloat32(0,true);
-}
+    for (var j = 0; j < fLen; j++) {
+      p = j * 4;
+      dView.setUint8(0, binaryString.charCodeAt(p));
+      dView.setUint8(1, binaryString.charCodeAt(p + 1));
+      dView.setUint8(2, binaryString.charCodeAt(p + 2));
+      dView.setUint8(3, binaryString.charCodeAt(p + 3));
+      fAry[j] = dView.getFloat32(0, true);
+    }
     return fAry;
-}
+  }
 
+  async updateCheckInCamera(cameraId: string, id: string)  {
+    const camera = await this.cameraModel.updateOne({
+      ip: cameraId
+    }, {
+      $push: {
+        checkIn: {
+          userId: id,
+          timeStamp: new Date()
+        }
+      }
+    });
+    if (!camera)
+      throw new BadRequestException('Không tìm thấy ip có địa chỉ trên.');
+  }
 }

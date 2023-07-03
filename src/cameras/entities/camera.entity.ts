@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Environment, EnvironmentSchema } from 'src/environment/entities/environment.entity';
+import {
+  Environment,
+  EnvironmentSchema,
+} from 'src/environment/entities/environment.entity';
 import {
   Information,
   InformationSchema,
@@ -13,7 +16,7 @@ export class Camera extends Document {
   name!: string;
 
   @Prop()
-  room!:string;
+  room!: string;
 
   @Prop()
   ip!: string;
@@ -36,9 +39,17 @@ export class Camera extends Document {
   @Prop()
   count: number;
 
-  @Prop({type: [{type: CheckInEntitySchema}], default: []})
-  checkIn: CheckInEntity[];
+  @Prop()
+  temperature: number;
+
+  @Prop()
+  humidity: number;
+
+  @Prop()
+  ppm!: number;
   
+  @Prop({ type: [{ type: CheckInEntitySchema }], default: [] })
+  checkIn: CheckInEntity[];
 }
 
 export const CameraSchema = SchemaFactory.createForClass(Camera);

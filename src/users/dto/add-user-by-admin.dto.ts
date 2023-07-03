@@ -1,6 +1,7 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { Role } from 'src/auth/permission/role.enum';
 
-export class RegisterDto {
+export class AddUserByAdminDto {
   @IsNotEmpty()
   @IsString()
   name!: string;
@@ -20,4 +21,8 @@ export class RegisterDto {
   code: number;
 
   birthday: Date;
+  
+  @IsEnum(Role)
+  role!: Role;
+  
 }
