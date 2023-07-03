@@ -19,15 +19,16 @@ import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { DistrictModule } from './district/district.module';
 import { CityModule } from './city/city.module';
-import { StallModule } from './stall/stall.module';
-import { ProductModule } from './product/product.module';
 import { EnvironmentModule } from './environment/environment.module';
 import { StorageModule } from './storage/storage.module';
+// import { ScheduleModule } from '@nestjs/schedule';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
     UsersModule,
     CamerasModule,
+    // ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [config],
@@ -70,10 +71,9 @@ import { StorageModule } from './storage/storage.module';
     EventsModule,
     DistrictModule,
     CityModule,
-    StallModule,
-    ProductModule,
     EnvironmentModule,
     StorageModule,
+    SchedulerModule,
   ],
   controllers: [],
   providers: [

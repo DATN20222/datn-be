@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { RegisterDto } from './dto/register.dto';
@@ -13,10 +13,14 @@ import { Events } from 'src/events/events';
 import { HistoryDto } from './dto/history.dto';
 import { VectorEntity } from './entities/vectors.entity';
 import { HistoryEntity } from './entities/history.entity';
+import { UpdateVectorUser } from './dto/update-vector.dto';
+import { CamerasService } from 'src/cameras/cameras.service';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @Inject(forwardRef(() => CamerasService))
+    private readonly cameraService: CamerasService,
     private eventEmitter: EventEmitter2,
   ) { }
 
@@ -27,7 +31,7 @@ export class UsersService {
   }
 
   async getOneById(id: string) {
-    return Optional.ofNullable(await this.userModel.findById(id).lean().exec());
+    return await this.userModel.findById(id).exec();
   }
 
   async getOneByCode(code: number) {
@@ -80,6 +84,10 @@ export class UsersService {
 
   async getAllUser() {
     return this.userModel.find().select('-password -otp -otpExpired').exec();
+  }
+
+  async delVectorsInDayUser() {
+    await this.userModel.updateMany({}, { vectors: [] }).exec();
   }
 
   convertBase64ToVector(encodedString) {
@@ -146,20 +154,32 @@ export class UsersService {
 
   async updateHistoryEvent(dto: HistoryDto, id: string) {
     const user = await this.userModel.findById(id).exec();
-    if (user == null) throw new BadRequestException('Không tìm thấy người dùng.');
+    if (user == null)
+      throw new BadRequestException('Không tìm thấy người dùng.');
     user.history.push(dto);
     return await user.save();
   }
 
   async updateVector(dto: VectorEntity, id: string) {
     const user = await this.userModel.findById(id).exec();
-    if (user == null) throw new BadRequestException('Không tìm thấy người dùng.');
+    if (user == null)
+      throw new BadRequestException('Không tìm thấy người dùng.');
     user.vectors.push(dto);
     return await user.save();
   }
 
-  async updateVectorUser(newVector: string, cameraId: string, userId: number, timeStamp: Date) {
-    const users = await this.userModel.find().select('-password -otp -otpExpired').exec();
+
+  async updateVectorUser(
+    newVector: string,
+    cameraId: string,
+    userId: number,
+    timeStamp: Date,
+  ) {
+    const users = await this.userModel
+      .find()
+      .select('-password -otp -otpExpired')
+      .exec();
+
     console.log(users);
     const newVectorDecode = this.convertBase64ToVector(newVector);
     for (let index = 0; index < users.length; index++) {
@@ -169,18 +189,31 @@ export class UsersService {
         for (let item = 0; item < element.vectors.length; item++) {
           const vectorItem = element.vectors[item];
           if (cameraId == vectorItem.cameraId && userId == vectorItem.userId) {
-            return await this.updateHistoryEvent({ cameraId: cameraId, timeStamp: timeStamp } as HistoryEntity, element._id);
-
-          } else if (cameraId == vectorItem.cameraId && userId < vectorItem.userId) {
+            return await this.updateHistoryEvent(
+              { cameraId: cameraId, timeStamp: timeStamp } as HistoryEntity,
+              element._id,
+            );
+          } else if (
+            cameraId == vectorItem.cameraId &&
+            userId < vectorItem.userId
+          ) {
             continue;
           } else {
             if (this.checkMapUser(vectorItem.vector, newVectorDecode)) {
-              await this.updateVector({ cameraId: cameraId, userId: userId, vector: newVector } as VectorEntity, element._id);
-              return await this.updateHistoryEvent({ cameraId: cameraId, timeStamp: timeStamp } as HistoryEntity, element._id);
+              await this.updateVector(
+                {
+                  cameraId: cameraId,
+                  userId: userId,
+                  vector: newVector,
+                } as VectorEntity,
+                element._id,
+              );
+              return await this.updateHistoryEvent(
+                { cameraId: cameraId, timeStamp: timeStamp } as HistoryEntity,
+                element._id,
+              );
             }
-
           }
-
         }
       }
 
@@ -190,8 +223,44 @@ export class UsersService {
   async checkMapUser(oldVector: string, newVectorDecode: number[]) {
     const oldVectorDecode = this.convertBase64ToVector(oldVector);
     const score = cosineSimilarity(oldVectorDecode, newVectorDecode);
+
     return (score < 0.35);
+
   }
 
-
+  async updateVectorByUser(body: UpdateVectorUser) {
+    const user = await this.getOneByCode(body.userId);
+    const camera = await this.cameraService.findOneByIp(body.cameraId);
+    if (!camera) throw new BadRequestException("Không tìm thấy camera có địa chỉ ip trên");
+    if (user) {
+      if (user.vectors && user.vectors.length != 0) {
+        if (cosineSimilarity(user.vectors[0].vector, body.vector) > 0.25){
+          await this.cameraService.updateCheckInCamera(body.cameraId, user._id);
+          return await user.updateOne({
+            $push: {
+              vectors: {
+                cameraId: body.cameraId,
+                userId: body.userId,
+                vector: body.vector,
+              },
+              history: { cameraId: body.cameraId, timeStamp: new Date() },
+            },
+          });
+        }
+          
+      }
+      await this.cameraService.updateCheckInCamera(body.cameraId, user._id);
+      return await user.updateOne({
+        $push: {
+          vectors: {
+            cameraId: body.cameraId,
+            userId: body.userId,
+            vector: body.vector,
+          },
+          history: { cameraId: body.cameraId, timeStamp: new Date() },
+        },
+      });
+    }
+    throw new BadRequestException('Không tìm thấy người dùng.');
+  }
 }
