@@ -21,7 +21,7 @@ async function bootstrap() {
       urls: [
         {
           protocol: 'amqp',
-          hostname: 'localhost',
+          hostname: '34.124.151.237',
           port: 5672,
           username: 'admin',
           password: 'admin',
@@ -40,7 +40,7 @@ async function bootstrap() {
       urls: [
         {
           protocol: 'amqp',
-          hostname: 'localhost',
+          hostname: '34.124.151.237',
           port: 5672,
           username: 'admin',
           password: 'admin',
@@ -59,7 +59,7 @@ async function bootstrap() {
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.RMQ,
   //   options: {
-  //     urls: ['amqp://admin:admin@localhost:5672'],
+  //     urls: ['amqp://admin:admin@34.124.151.137:5672'],
   //     queue: 'q-2',
   //     queueOptions: {
   //       durable: false,
@@ -94,6 +94,6 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   await app.listen(port!);
-  console.log(`Server run in: http://localhost:${port}`);
+  console.log(`Server run in: http://34.124.151.237:${port}`);
 }
 bootstrap();

@@ -22,7 +22,7 @@ export class UsersService {
     @Inject(forwardRef(() => CamerasService))
     private readonly cameraService: CamerasService,
     private eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async findOneByPhone(phone: string) {
     return Optional.ofNullable(
@@ -168,6 +168,7 @@ export class UsersService {
     return await user.save();
   }
 
+
   async updateVectorUser(
     newVector: string,
     cameraId: string,
@@ -178,6 +179,7 @@ export class UsersService {
       .find()
       .select('-password -otp -otpExpired')
       .exec();
+
     console.log(users);
     const newVectorDecode = this.convertBase64ToVector(newVector);
     for (let index = 0; index < users.length; index++) {
@@ -214,13 +216,16 @@ export class UsersService {
           }
         }
       }
+
     }
   }
 
   async checkMapUser(oldVector: string, newVectorDecode: number[]) {
     const oldVectorDecode = this.convertBase64ToVector(oldVector);
     const score = cosineSimilarity(oldVectorDecode, newVectorDecode);
-    return score < 0.35;
+
+    return (score < 0.35);
+
   }
 
   async updateVectorByUser(body: UpdateVectorUser) {

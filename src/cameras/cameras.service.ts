@@ -11,7 +11,7 @@ import { Camera } from './entities/camera.entity';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { Environment } from 'src/environment/entities/environment.entity';
-import { Env } from 'onnxruntime-web';
+// import { Env } from 'onnxruntime-web';
 import { CheckInEntity } from './entities/checkin.entity';
 
 @Injectable()
@@ -38,6 +38,7 @@ export class CamerasService {
     }
     if (!this.isIpAddress(createCameraDto.ip))
       throw new BadRequestException('Ip không đúng định dạng');
+
     return await this.cameraModel.create(createCameraDto);
   }
 
@@ -273,7 +274,12 @@ export class CamerasService {
     var fLen = binaryString.length / Float32Array.BYTES_PER_ELEMENT;
     var dView = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
     var fAry = new Float32Array(fLen);
-    var p = 0; // Position
+
+    // var bytes = new Float32Array(binaryString.length);
+    // for (var i = 0; i < binaryString.length; i++) {
+    //     bytes[i] = binaryString.charCodeAt(i);
+    // }
+    var p = 0;																// Position
 
     for (var j = 0; j < fLen; j++) {
       p = j * 4;

@@ -59,7 +59,7 @@
     "typescript-optional": "^3.0.0-alpha.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "^9.0.0",
+    "@nestjs/cli": "^9.5.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",
     "@types/amqplib": "^0.10.1",
