@@ -8,5 +8,7 @@ export class CreateEnvironmentDto {
 
   ppm!: number;
 
+  count: number;
+
   cameraId: string;
 }

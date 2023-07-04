@@ -16,13 +16,13 @@ import { CheckInEntity } from './entities/checkin.entity';
 
 @Injectable()
 export class CamerasService {
-  
+
   constructor(
     @InjectModel(Camera.name)
     private readonly cameraModel: Model<Camera>,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
-  ) {}
+  ) { }
   async create(createCameraDto: CameraDto) {
     // const camera = new this.cameraModel(createCameraDto);
     if (
@@ -101,6 +101,7 @@ export class CamerasService {
           camera.temperature = rest.temperature;
           camera.humidity = rest.humidity;
           camera.ppm = rest.ppm;
+          camera.count = rest.count;
           camera.event.push({ ...rest } as Environment);
         }
       }
@@ -292,7 +293,7 @@ export class CamerasService {
     return fAry;
   }
 
-  async updateCheckInCamera(cameraId: string, id: string)  {
+  async updateCheckInCamera(cameraId: string, id: string) {
     const camera = await this.cameraModel.updateOne({
       ip: cameraId
     }, {
