@@ -107,6 +107,7 @@ export class CamerasService {
       }
       return await camera.save();
     } else if (updateCameraDto.type == 3) {
+      console.log(updateCameraDto);
       let user = await this.userService.getOneByCode(updateCameraDto.code);
       if (user != null && user != undefined) {
         // user.vector.push(updateCameraDto.vector);
@@ -175,6 +176,7 @@ export class CamerasService {
 
   async getInfor(ip: string) {
     const camera = await this.findOneByIp(ip);
+    console.log(camera);
     const length = camera.event.length;
     return length != 0 ? camera.event.at(length - 1) : null;
   }

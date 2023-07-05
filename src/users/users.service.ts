@@ -161,11 +161,17 @@ export class UsersService {
   }
 
   async updateVector(dto: VectorEntity, id: string) {
-    const user = await this.userModel.findById(id).exec();
-    if (user == null)
-      throw new BadRequestException('Không tìm thấy người dùng.');
-    user.vectors.push(dto);
-    return await user.save();
+    // const user = await this.userModel.findById(id).exec();
+    // if (user == null)
+    //   throw new BadRequestException('Không tìm thấy người dùng.');
+    // user.vectors.push(dto);
+    return this.userModel.findByIdAndUpdate(id,
+      {
+        $push: {
+          vectors: dto
+        }
+      }).exec();
+    // return await user.save();
   }
 
 
@@ -234,7 +240,7 @@ export class UsersService {
     if (!camera) throw new BadRequestException("Không tìm thấy camera có địa chỉ ip trên");
     if (user) {
       if (user.vectors && user.vectors.length != 0) {
-        if (cosineSimilarity(user.vectors[0].vector, body.vector) > 0.25){
+        if (cosineSimilarity(user.vectors[0].vector, body.vector) > 0.25) {
           await this.cameraService.updateCheckInCamera(body.cameraId, user._id);
           return await user.updateOne({
             $push: {
@@ -247,7 +253,7 @@ export class UsersService {
             },
           });
         }
-          
+
       }
       await this.cameraService.updateCheckInCamera(body.cameraId, user._id);
       return await user.updateOne({
