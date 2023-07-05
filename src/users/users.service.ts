@@ -161,17 +161,17 @@ export class UsersService {
   }
 
   async updateVector(dto: VectorEntity, id: string) {
-    // const user = await this.userModel.findById(id).exec();
-    // if (user == null)
-    //   throw new BadRequestException('Không tìm thấy người dùng.');
-    // user.vectors.push(dto);
-    return this.userModel.findByIdAndUpdate(id,
-      {
-        $push: {
-          vectors: dto
-        }
-      }).exec();
-    // return await user.save();
+    const user = await this.userModel.findById(id).exec();
+    if (user == null)
+      throw new BadRequestException('Không tìm thấy người dùng.');
+    user.vectors.push(dto);
+    // return this.userModel.findByIdAndUpdate(id,
+    //   {
+    //     $push: {
+    //       vectors: dto
+    //     }
+    //   }).exec();
+    return await user.save();
   }
 
 

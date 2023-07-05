@@ -12,7 +12,7 @@ import { EventHandler } from './events.listeners';
           urls: [
             {
               protocol: 'amqp',
-              hostname: '34.124.151.237',
+              hostname: '34.142.132.0',
               port: 5672,
               username: 'admin',
               password: 'admin',
