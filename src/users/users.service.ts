@@ -186,7 +186,6 @@ export class UsersService {
       .select('-password -otp -otpExpired')
       .exec();
 
-    console.log(users);
     const newVectorDecode = this.convertBase64ToVector(newVector);
     for (let index = 0; index < users.length; index++) {
       const element = users[index];
@@ -228,7 +227,7 @@ export class UsersService {
 
   async checkMapUser(oldVector: string, newVectorDecode: number[]) {
     const oldVectorDecode = this.convertBase64ToVector(oldVector);
-    const score = cosineSimilarity(oldVectorDecode, newVectorDecode);
+    const score = this.cosineSimilarity(oldVectorDecode, newVectorDecode);
 
     return (score < 0.35);
 
