@@ -6,6 +6,8 @@ export class HistoryEntity{
   cameraId: string;
   @Prop({type: Date})
   timeStamp!: Date;
+  @Prop()
+  position: string;
 }
 
 export const HistoryEntitySchema = SchemaFactory.createForClass(HistoryEntity);

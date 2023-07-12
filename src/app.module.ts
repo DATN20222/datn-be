@@ -35,7 +35,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     }),
     AMQPModule.forRoot({
       name: 'rabbitmq',
-      hostname: '34.124.151.237',
+      hostname: 'localhost',
       port: 5672,
       username: 'admin',
       password: 'admin',
@@ -82,4 +82,4 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     { provide: APP_PIPE, useClass: ValidationPipe },
   ],
 })
-export class AppModule { }
+export class AppModule {}
