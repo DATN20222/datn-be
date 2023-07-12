@@ -75,12 +75,18 @@ export class UsersController {
   @Get('/byid/:id')
   @ApiBearerAuth()
   getUserById(@Param('id') id: string){
-    return this.usersService.getOneById(id);
+    return this.usersService.getOneOrderById(id);
   }
 
   @Patch('/update-vector/:id')
   @ApiBearerAuth()
   updateVector(@Param('id') id: string, @Body() body: UpdateVectorUser){
     return this.usersService.updateVectorByUser(body);
+  }
+
+  @Get('/get-list/:id')
+  @ApiBearerAuth()
+  getListHistory(@Param('id') id: string){
+    return this.usersService.getListEvents(id);
   }
 }

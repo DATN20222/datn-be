@@ -137,38 +137,39 @@ export class CamerasService {
           ip,
           updateCameraDto.userId,
           updateCameraDto.timeStamp,
+          updateCameraDto.position
         );
       }
     }
   }
 
-  convertBase64ToVector(encodedString) {
-    let binary_string = atob(encodedString);
-    let buffer = new ArrayBuffer(binary_string.length);
-    let bytes_buffer = new Uint8Array(buffer);
+  // convertBase64ToVector(encodedString) {
+  //   let binary_string = atob(encodedString);
+  //   let buffer = new ArrayBuffer(binary_string.length);
+  //   let bytes_buffer = new Uint8Array(buffer);
 
-    for (let i = 0; i < binary_string.length; i++) {
-      bytes_buffer[i] = binary_string.charCodeAt(i);
-    }
+  //   for (let i = 0; i < binary_string.length; i++) {
+  //     bytes_buffer[i] = binary_string.charCodeAt(i);
+  //   }
 
-    let values = new Float64Array(buffer);
-    return Array.from(values);
-  }
+  //   let values = new Float64Array(buffer);
+  //   return Array.from(values);
+  // }
 
-  cosineSimilarity(emb1, emb2) {
-    const dotProduct = emb1.reduce(
-      (sum, value, index) => sum + value * emb2[index],
-      0,
-    );
-    const normEmb1 = Math.sqrt(
-      emb1.reduce((sum, value) => sum + value ** 2, 0),
-    );
-    const normEmb2 = Math.sqrt(
-      emb2.reduce((sum, value) => sum + value ** 2, 0),
-    );
+  // cosineSimilarity(emb1, emb2) {
+  //   const dotProduct = emb1.reduce(
+  //     (sum, value, index) => sum + value * emb2[index],
+  //     0,
+  //   );
+  //   const normEmb1 = Math.sqrt(
+  //     emb1.reduce((sum, value) => sum + value ** 2, 0),
+  //   );
+  //   const normEmb2 = Math.sqrt(
+  //     emb2.reduce((sum, value) => sum + value ** 2, 0),
+  //   );
 
-    return (1 - dotProduct / (normEmb1 * normEmb2)) / 2;
-  }
+  //   return (1 - dotProduct / (normEmb1 * normEmb2)) / 2;
+  // }
 
   async remove(id: string) {
     return await this.cameraModel.findByIdAndDelete(id).exec();

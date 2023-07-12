@@ -2,7 +2,7 @@ http:
   port: 8800
 
 db:
-  url: 'mongodb://boffice:boffice_admin@34.142.132.0:27019/DATN?authSource=admin&readPreference=primary&ssl=false'
+  url: 'mongodb://boffice:boffice_admin@localhost:27018/DATN?authSource=admin&readPreference=primary&ssl=false'
 
 jwt:
   secretKey: '6b809f4ea688f2679fc5f2dcdb4c6a71150464dd7fca98954b58dbdb47258d55e6df7df062e5ac7f75e0240ec7b351cf038972fe1c3320b1c162c71131985d2f'

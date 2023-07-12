@@ -34,6 +34,13 @@ export class UsersService {
     return await this.userModel.findById(id).exec();
   }
 
+  async getOneOrderById(id: string){
+    const user = await this.userModel.findById(id).exec();
+    let events = user.history.sort((a,b) => -a.timeStamp.getTime() +(b.timeStamp.getTime()));
+    user.history = events;
+    return user;
+  }
+
   async getOneByCode(code: number) {
     return await this.userModel.findOne({ code: code }).exec();
   }
@@ -180,12 +187,12 @@ export class UsersService {
     cameraId: string,
     userId: number,
     timeStamp: Date,
+    position: string
   ) {
     const users = await this.userModel
       .find()
       .select('-password -otp -otpExpired')
       .exec();
-
     const newVectorDecode = this.convertBase64ToVector(newVector);
     for (let index = 0; index < users.length; index++) {
       const element = users[index];
@@ -214,7 +221,7 @@ export class UsersService {
                 element._id,
               );
               return await this.updateHistoryEvent(
-                { cameraId: cameraId, timeStamp: timeStamp } as HistoryEntity,
+                { cameraId: cameraId, timeStamp: timeStamp, position: position } as HistoryEntity,
                 element._id,
               );
             }
@@ -267,5 +274,15 @@ export class UsersService {
       });
     }
     throw new BadRequestException('Không tìm thấy người dùng.');
+  }
+
+  async getListEvents(id: string){
+    const user = await this.userModel.findById(id).exec();
+    if (user != null){
+      let events = user.history.sort((a,b) => -a.timeStamp.getTime() +(b.timeStamp.getTime()));
+      return events;
+    }
+    return [];
+    
   }
 }
