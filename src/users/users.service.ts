@@ -469,28 +469,32 @@ export class UsersService {
     const users = (await this.getAllUser()) ?? [];
     var priorityUsers = [];
     var normalUsers = [];
+    var secondPriorityUsers = [];
     for (var item = 0; item < users.length; item++) {
       if (
-        users[item].updateTime.getTime() > Date.now() - 60000 ||
+        users[item].updateTime.getTime() > Date.now() - 30000 ||
         (users[item].history &&
           users[item].history.length > 0 &&
           users[item].history[users[item].history.length - 1].position &&
+          users[item].history[users[item].history.length - 1].timeStamp.getTime() > Date.now() - 30000 && users[item].history[users[item].history.length - 1].timeStamp.getTime() < Date.now() - 2000 &&
           this.isEdgeFramePosition(users[item].history[users[item].history.length - 1].position))
       ) {
         priorityUsers.push(users[item]);
       } 
-      // else if (users[item].updateTime.getTime() > Date.now() - 10000){
-      //   // secondPriorityUser.push(users[item]);
-      // }
+      else if (users[item].history &&
+        users[item].history.length > 0 &&
+        users[item].history[users[item].history.length - 1].position &&
+        users[item].history[users[item].history.length - 1].timeStamp.getTime() > Date.now() - 360000 && users[item].history[users[item].history.length - 1].timeStamp.getTime() < Date.now() - 3000){
+        secondPriorityUsers.push(users[item]);
+      }
       else {
         normalUsers.push(users[item]);
       }
     }
-    return { priorityUsers, normalUsers };
+    return { priorityUsers, secondPriorityUsers, normalUsers };
   }
 
   async updateVector2(dto: VectorEntity, id: string) {
-    // console.log(dto);
     return await this.userModel
       .findByIdAndUpdate(id, {
         $push: {
@@ -515,8 +519,8 @@ export class UsersService {
     console.log("ProgressType2");
     // so sanh local id
     console.log(userId);
-    const today = new Date();
-    const tomorrow = new Date(today.getDate() + 1);
+    // const today = new Date();
+    // const tomorrow = new Date(today.getDate() + 1);
     const userHaveLocal = await this.userModel
       .findOne({
         history: {
@@ -541,7 +545,7 @@ export class UsersService {
     console.log("Start compare vector");
     //so sanh vector
     if (newVector == null || newVector.length == 0) return;
-    const { priorityUsers, normalUsers } = await this.getListUserPriority();
+    const { priorityUsers,secondPriorityUsers, normalUsers } = await this.getListUserPriority();
     console.log(priorityUsers);
     // console.log(normalUsers);
     
@@ -559,7 +563,7 @@ export class UsersService {
               this.convertBase64ToVector(vectorItem),
               this.convertBase64ToVector(newVector),
             );
-            if (valueDistance < 0.28) {
+            if (valueDistance < 0.25) {
               await this.updateHistoryEvent(
                 {
                   cameraId: cameraId,
@@ -594,8 +598,44 @@ export class UsersService {
           }
         }
       }
-
-      
+      console.log(secondPriorityUsers);
+      if (secondPriorityUsers.length > 0){
+        for (var item = 0; item < secondPriorityUsers.length; item++){
+          const user = secondPriorityUsers[item];
+          if (user.vectors && user.vectors.length > 0) {
+            for (var index = 0; index < user.vectors; index++) {
+              const vectorItem = user.vectors[item].vector;
+              const valueDistance = this.cosineSimilarity(
+                this.convertBase64ToVector(vectorItem),
+                this.convertBase64ToVector(newVector),
+              );
+              if (valueDistance < 0.25) {
+                await this.updateHistoryEvent(
+                  {
+                    cameraId: cameraId,
+                    timeStamp: timeStamp,
+                    position: position,
+                    userId: userId,
+                  } as HistoryEntity,
+                  user._id,
+                );
+                if (valueDistance > 0.2){
+                  console.log(newVector);
+                  await this.updateVector2(
+                    {
+                      cameraId: cameraId,
+                      userId: userId,
+                      vector: newVector,
+                    } as VectorEntity,
+                    user._id,
+                  );
+                }
+                return;
+              }
+            }
+          }
+        }
+      }
       
       if (minPriorityValue > 0.2) await this.updateVector2({
         cameraId: cameraId,
