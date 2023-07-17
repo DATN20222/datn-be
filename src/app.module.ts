@@ -10,15 +10,10 @@ import { JwtGuard } from './auth/jwt.guard';
 import { RolesGuard } from './auth/permission/role.guard';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AMQPModule } from '@enriqcg/nestjs-amqp';
-// import { SocketGateway } from './socket/socket.gateway';
-// import { SocketModule } from './socket/socket.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 import { InformationModule } from './information/information.module';
-// import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
-import { DistrictModule } from './district/district.module';
-import { CityModule } from './city/city.module';
 import { EnvironmentModule } from './environment/environment.module';
 import { StorageModule } from './storage/storage.module';
 // import { ScheduleModule } from '@nestjs/schedule';
@@ -69,8 +64,6 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     InformationModule,
     AuthModule,
     EventsModule,
-    DistrictModule,
-    CityModule,
     EnvironmentModule,
     StorageModule,
     SchedulerModule,

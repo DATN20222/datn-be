@@ -39,6 +39,9 @@ export class User extends Document {
   @Prop()
   code: number;
 
+  @Prop({ type: Date, default: new Date() })
+  updateTime!: Date;
+
   //luu lich su xuat hien
   @Prop({type: [{ type: HistoryEntitySchema}], default: []})
   history: HistoryEntity[];

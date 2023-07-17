@@ -21,6 +21,7 @@ import { CurrentUser } from '../auth/whoami.decorator';
 import { User } from './entities/user.entity';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateVectorUser } from './dto/update-vector.dto';
+import { AddUserByAdminDto } from './dto/add-user-by-admin.dto';
 
 @Controller('accounts')
 @ApiTags('Account Resource')
@@ -32,6 +33,14 @@ export class UsersController {
   @HttpCode(201)
   register(@Body() dto: RegisterDto) {
     return this.usersService.createNewUser(dto);
+  }
+
+  @Post('/admin')
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @HttpCode(201)
+  registerByAdmin(@Body() dto: AddUserByAdminDto) {
+    return this.usersService.createNewUserByAdmin(dto);
   }
 
   @Patch('/password')
@@ -89,4 +98,17 @@ export class UsersController {
   getListHistory(@Param('id') id: string){
     return this.usersService.getListEvents(id);
   }
+
+  @Get('/get-list-people')
+  @Public()
+  getListUserTest(){
+    return this.usersService.testGetListUserSortByUpdateTime();
+  }
+
+  @Get('/get-person')
+  @Public()
+  getPersonHaveVector(){
+    return this.usersService.testUserHaveUserLocalBefore();
+  }
+
 }

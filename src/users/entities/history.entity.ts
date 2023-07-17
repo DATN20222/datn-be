@@ -8,6 +8,8 @@ export class HistoryEntity{
   timeStamp!: Date;
   @Prop()
   position: string;
+  @Prop()
+  userId: number;
 }
 
 export const HistoryEntitySchema = SchemaFactory.createForClass(HistoryEntity);

@@ -33,7 +33,7 @@ export class Camera extends Document {
   @Prop({ default: '' })
   image!: string;
 
-  @Prop({ type: Date })
+  @Prop({ type: Date, default: new Date() })
   timeStamp!: Date;
 
   @Prop()

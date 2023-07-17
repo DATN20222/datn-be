@@ -23,6 +23,7 @@ export class CamerasService {
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
   ) { }
+
   async create(createCameraDto: CameraDto) {
     // const camera = new this.cameraModel(createCameraDto);
     if (
@@ -102,6 +103,7 @@ export class CamerasService {
           camera.humidity = rest.humidity;
           camera.ppm = rest.ppm;
           camera.count = rest.count;
+          camera.timeStamp = new Date();
           camera.event.push({ ...rest } as Environment);
         }
       }
@@ -117,7 +119,7 @@ export class CamerasService {
           } as CheckInEntity);
           await camera.save();
         }
-        return await this.userService.updateVector(
+        return await this.userService.updateVectorDoor(
           {
             cameraId: ip,
             userId: updateCameraDto.userId,
@@ -131,50 +133,29 @@ export class CamerasService {
       if (camera != null && camera != undefined) {
         // camera.event.push({ ...updateCameraDto, _id: eventId } as Environment);
         // if (image != null && image.length != 0) camera.image = image;
-        return await this.userService.updateVectorUser(
+        // return await this.userService.updateVectorUser(
+        //   updateCameraDto.vector,
+        //   ip,
+        //   updateCameraDto.userId,
+        //   updateCameraDto.timeStamp,
+        //   updateCameraDto.position
+        // );
+        return this.userService.progressType2(
           updateCameraDto.vector,
           ip,
           updateCameraDto.userId,
           updateCameraDto.timeStamp,
           updateCameraDto.position
-        );
+        )
       }
     }
   }
-
-  // convertBase64ToVector(encodedString) {
-  //   let binary_string = atob(encodedString);
-  //   let buffer = new ArrayBuffer(binary_string.length);
-  //   let bytes_buffer = new Uint8Array(buffer);
-
-  //   for (let i = 0; i < binary_string.length; i++) {
-  //     bytes_buffer[i] = binary_string.charCodeAt(i);
-  //   }
-
-  //   let values = new Float64Array(buffer);
-  //   return Array.from(values);
-  // }
-
-  // cosineSimilarity(emb1, emb2) {
-  //   const dotProduct = emb1.reduce(
-  //     (sum, value, index) => sum + value * emb2[index],
-  //     0,
-  //   );
-  //   const normEmb1 = Math.sqrt(
-  //     emb1.reduce((sum, value) => sum + value ** 2, 0),
-  //   );
-  //   const normEmb2 = Math.sqrt(
-  //     emb2.reduce((sum, value) => sum + value ** 2, 0),
-  //   );
-
-  //   return (1 - dotProduct / (normEmb1 * normEmb2)) / 2;
-  // }
 
   async remove(id: string) {
     return await this.cameraModel.findByIdAndDelete(id).exec();
   }
 
-  async getInfor(ip: string) {
+  async getLastInfor(ip: string) {
     const camera = await this.findOneByIp(ip);
     const length = camera.event.length;
     return length != 0 ? camera.event.at(length - 1) : null;
@@ -306,6 +287,6 @@ export class CamerasService {
       }
     });
     if (!camera)
-      throw new BadRequestException('Không tìm thấy ip có địa chỉ trên.');
+      throw new BadRequestException('Không tìm thấy camera có địa chỉ ip trên.');
   }
 }

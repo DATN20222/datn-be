@@ -7,12 +7,12 @@ import { InformationDto } from 'src/information/dto/information.dto';
 @Injectable()
 export class RabbitmqService {
   constructor(
-    private readonly camrasService: CamerasService,
+    private readonly camerasService: CamerasService,
     private eventEmitter: EventEmitter2,
   ) {}
 
   async save(ip: string, data: InformationDto, image: string) {
-    return await this.camrasService.updateEvent(ip, data, image);
+    return await this.camerasService.updateEvent(ip, data, image);
   }
 
   controlMusic() {

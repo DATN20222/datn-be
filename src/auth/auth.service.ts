@@ -17,17 +17,14 @@ export class AuthService {
   ) {}
 
   async validateUser(payload: JwtPayload) {
-    const user = (
-      await this.usersService.findOneByPhone(payload.phone)
-    ).orElseThrow(() => new UnauthorizedException('JWT không hợp lệ'));
+    const user =   await this.usersService.findOneByPhone(payload.phone);
     const { _id, name, role, phone, code, email } = user;
     return { _id, name, role, phone, code, email };
   }
 
   async login(dto: LoginDTO) {
-    const user = (
-      await this.usersService.findOneByPhone(dto.phone)
-    ).orElseThrow(() => new BadRequestException('Số điện thoại không tồn tại'));
+    const user = 
+      await this.usersService.findOneByPhone(dto.phone);
 
     await bcrypt.compare(dto.password, user.password).then((isMatch) => {
       if (!isMatch) throw new BadRequestException('Sai mật khẩu');

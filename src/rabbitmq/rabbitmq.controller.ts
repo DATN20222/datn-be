@@ -11,10 +11,8 @@ import {
   Payload,
   RmqContext,
 } from '@nestjs/microservices';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/jwt.guard';
+import { ApiTags } from '@nestjs/swagger';
 import { RabbitmqService } from './rabbitmq.service';
-import { RabbitMQPubSubClient } from './rabbitmqClient';
 
 @ApiTags('Sensors Controller')
 @Controller('sensors')
@@ -31,8 +29,8 @@ export class RabbitmqController implements OnApplicationBootstrap {
 
   @MessagePattern()
   async getNotifications(@Payload() data: any, @Ctx() context: RmqContext) {
+    // console.log(data);
     const jsonData = JSON.parse(JSON.stringify(data));
-    console.log(jsonData);
     await this.rabbitmqService.save(
       jsonData['ip'],
       jsonData,
@@ -40,11 +38,11 @@ export class RabbitmqController implements OnApplicationBootstrap {
     );
   }
 
-  @Post()
-  @Public()
-  getControllerMusic() {
-    console.log('Get control');
-    this.rabbitmqService.controlMusic();
+  // @Post()
+  // @Public()
+  // getControllerMusic() {
+  //   console.log('Get control');
+  //   this.rabbitmqService.controlMusic();
     // const message = ':cat:';
     // const record = new RmqRecordBuilder(message)
     //   .setOptions({
@@ -68,5 +66,5 @@ export class RabbitmqController implements OnApplicationBootstrap {
     //     (error) => console.error(error.message),
     //   );
     // return 0;
-  }
+  // }
 }

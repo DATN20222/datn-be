@@ -70,7 +70,7 @@ export class CamerasController {
 
   @Get('/events/:ip')
   findEvent(@Param('ip') ip: string) {
-    return this.camerasService.getInfor(ip);
+    return this.camerasService.getLastInfor(ip);
   }
 
   @Get('/events')
