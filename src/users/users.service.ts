@@ -191,7 +191,7 @@ export class UsersService {
       if (dto.cameraId == item.cameraId && dto.position == item.position) return await user.save();
       if (
         preItem.cameraId == item.cameraId &&
-        -item.timeStamp.getTime() + dto.timeStamp.getTime() < 2000 &&
+        -item.timeStamp.getTime() + dto.timeStamp.getTime() < 7000 &&
         this.haveDifferentPositionVector(dto.position, item.position)
       ) {
         user.history[user.history.length - 1].timeStamp = new Date();
@@ -515,7 +515,6 @@ export class UsersService {
     timeStamp: Date,
     position: string,
   ) {
-
     console.log("ProgressType2");
     // so sanh local id
     console.log(userId);
@@ -531,6 +530,7 @@ export class UsersService {
         },
       })
       .exec();
+
     if (userHaveLocal != null || userHaveLocal != undefined) {
       return await this.updateHistoryEvent(
         {
@@ -544,12 +544,59 @@ export class UsersService {
     }
     console.log("Start compare vector");
     //so sanh vector
+
     if (newVector == null || newVector.length == 0) return;
     const { priorityUsers,secondPriorityUsers, normalUsers } = await this.getListUserPriority();
-    console.log(priorityUsers);
+    // console.log(priorityUsers);
     // console.log(normalUsers);
     
-    if (priorityUsers.length > 0) {
+    if (priorityUsers.length == 0){
+      console.log(secondPriorityUsers);
+      if (secondPriorityUsers.length > 0){
+        console.log("test");
+        for (var item = 0; item < secondPriorityUsers.length; item++){
+          const user = secondPriorityUsers[item];
+          console.log(user.vectors.length);
+          if (user.vectors && user.vectors.length > 0) {
+            
+            for (var i = 0; i < user.vectors.length; i++) {
+              console.log("test");
+              console.log(user.vectors[i].vector);
+              const vectorItem = user.vectors[i].vector;
+              const valueDistance = this.cosineSimilarity(
+                this.convertBase64ToVector(vectorItem),
+                this.convertBase64ToVector(newVector),
+              );
+              console.log(valueDistance);
+              if (valueDistance < 0.25) {
+                await this.updateHistoryEvent(
+                  {
+                    cameraId: cameraId,
+                    timeStamp: timeStamp,
+                    position: position,
+                    userId: userId,
+                  } as HistoryEntity,
+                  user._id,
+                );
+                if (valueDistance > 0.2){
+                  console.log(newVector);
+                  await this.updateVector2(
+                    {
+                      cameraId: cameraId,
+                      userId: userId,
+                      vector: newVector,
+                    } as VectorEntity,
+                    user._id,
+                  );
+                }
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
+    if (priorityUsers.length > 0 ) {
       var minPriorityUser = priorityUsers[0];
       var minPriorityValue = 1;
       for (var item = 0; item < priorityUsers.length; item++) {
@@ -598,7 +645,6 @@ export class UsersService {
           }
         }
       }
-      console.log(secondPriorityUsers);
       if (secondPriorityUsers.length > 0){
         for (var item = 0; item < secondPriorityUsers.length; item++){
           const user = secondPriorityUsers[item];
@@ -656,4 +702,10 @@ export class UsersService {
     }
 
   }
+
+  // async getListPeopleInRoom(ip: string){
+  //   const users = await this.userModel.find({
+  //     history:
+  //   })
+  // }
 }
