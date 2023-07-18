@@ -553,10 +553,10 @@ export class UsersService {
     if (priorityUsers.length == 0){
       console.log(secondPriorityUsers);
       if (secondPriorityUsers.length > 0){
-        console.log("test");
+    
         for (var item = 0; item < secondPriorityUsers.length; item++){
           const user = secondPriorityUsers[item];
-          console.log(user.vectors.length);
+         
           if (user.vectors && user.vectors.length > 0) {
             
             for (var i = 0; i < user.vectors.length; i++) {
