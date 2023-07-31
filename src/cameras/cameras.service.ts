@@ -13,6 +13,7 @@ import { UsersService } from 'src/users/users.service';
 import { Environment } from 'src/environment/entities/environment.entity';
 // import { Env } from 'onnxruntime-web';
 import { CheckInEntity } from './entities/checkin.entity';
+import { EnvironmentService } from 'src/environment/environment.service';
 
 @Injectable()
 export class CamerasService {
@@ -22,6 +23,7 @@ export class CamerasService {
     private readonly cameraModel: Model<Camera>,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    // private readonly environmentService: EnvironmentService,
   ) { }
 
   async create(createCameraDto: CameraDto) {
@@ -100,14 +102,17 @@ export class CamerasService {
           const { type, ...rest } = updateCameraDto;
           camera.image = image;
           camera.temperature = rest.temperature;
+
           camera.humidity = rest.humidity;
           camera.ppm = rest.ppm;
           camera.count = rest.count;
-          camera.timeStamp = new Date();
+          camera.timeStamp = updateCameraDto.timeStamp;
           camera.event.push({ ...rest } as Environment);
+
         }
+        return await camera.save();
       }
-      return await camera.save();
+      
     } else if (updateCameraDto.type == 3) {
       let user = await this.userService.getOneByCode(updateCameraDto.code);
       if (user != null && user != undefined) {
@@ -126,6 +131,7 @@ export class CamerasService {
             vector: updateCameraDto.vector,
           },
           user._id,
+          updateCameraDto.timeStamp,
         );
         // return await user.save();
       }
@@ -140,7 +146,7 @@ export class CamerasService {
         //   updateCameraDto.timeStamp,
         //   updateCameraDto.position
         // );
-        return this.userService.progressType2(
+        return this.userService.progressType2In2107(
           updateCameraDto.vector,
           ip,
           updateCameraDto.userId,
@@ -275,14 +281,14 @@ export class CamerasService {
     return fAry;
   }
 
-  async updateCheckInCamera(cameraId: string, id: string) {
+  async updateCheckInCamera(cameraId: string, id: string, timeStamp: Date) {
     const camera = await this.cameraModel.updateOne({
       ip: cameraId
     }, {
       $push: {
         checkIn: {
           userId: id,
-          timeStamp: new Date()
+          timeStamp: timeStamp
         }
       }
     });

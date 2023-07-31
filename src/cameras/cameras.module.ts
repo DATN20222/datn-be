@@ -7,6 +7,10 @@ import { User, UserSchema } from 'src/users/entities/user.entity';
 import { UsersController } from 'src/users/users.controller';
 import { UsersService } from 'src/users/users.service';
 import { UsersModule } from 'src/users/users.module';
+// import { EnvironmentController } from 'src/environment/environment.controller';
+import { EnvironmentModule } from 'src/environment/environment.module';
+import { Environment } from 'src/environment/entities/environment.entity';
+import { EnvironmentService } from 'src/environment/environment.service';
 // import {
 //   Information,
 //   InformationSchema,
@@ -15,6 +19,7 @@ import { UsersModule } from 'src/users/users.module';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
+    // EnvironmentModule,
     MongooseModule.forFeature([
       {
         name: Camera.name,
@@ -24,7 +29,7 @@ import { UsersModule } from 'src/users/users.module';
     
   ],
   controllers: [CamerasController],
-  providers: [CamerasService],
+  providers: [CamerasService, ],
   exports: [CamerasService]
 })
 export class CamerasModule {}

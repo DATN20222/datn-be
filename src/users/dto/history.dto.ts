@@ -3,4 +3,5 @@ export class HistoryDto {
   timeStamp!: Date;
   position: string;
   userId:number;
+  type:string;
 }

@@ -12,6 +12,7 @@ export class RabbitmqService {
   ) {}
 
   async save(ip: string, data: InformationDto, image: string) {
+    // console.log(data);
     return await this.camerasService.updateEvent(ip, data, image);
   }
 

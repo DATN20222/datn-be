@@ -10,6 +10,8 @@ export class HistoryEntity{
   position: string;
   @Prop()
   userId: number;
+  @Prop()
+  type: string;
 }
 
 export const HistoryEntitySchema = SchemaFactory.createForClass(HistoryEntity);
