@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 // import { start } from 'repl';
-// import { Public } from 'src/auth/jwt.guard';
+import { Public } from 'src/auth/jwt.guard';
 import { Roles } from 'src/auth/permission/role.decorator';
 import { Role } from 'src/auth/permission/role.enum';
 // import { InformationDto } from 'src/information/dto/information.dto';
@@ -87,4 +87,10 @@ export class CamerasController {
   remove(@Param('id') id: string) {
     return this.camerasService.remove(id);
   }
+
+  
+  // @Get('test/:id')
+  // getd(@Param('id') id:string){
+  //   return this.camerasService.findOneWithOut(id);
+  // }
 }

@@ -53,6 +53,10 @@ export class CamerasService {
     return await this.cameraModel.findById(id).exec();
   }
 
+  async findOneWithOut(ip: string){
+    return await this.cameraModel.findOne({ ip: ip }).select('name').exec();
+  }
+
   async findOneByIp(ip: string) {
     return await this.cameraModel.findOne({ ip: ip }).exec();
   }

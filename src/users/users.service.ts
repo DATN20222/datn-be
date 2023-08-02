@@ -44,6 +44,10 @@ export class UsersService {
     let events = user.history.sort(
       (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
     );
+    for (var item of events){
+      item.cameraId = (await this.cameraService.findOneWithOut(item.cameraId)).name;
+    }
+    
     user.history = events;
     return user;
   }
