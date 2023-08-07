@@ -8,6 +8,7 @@ import {
   Post,
   Put,
   Query,
+  Delete
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/auth/jwt.guard';
@@ -109,6 +110,13 @@ export class UsersController {
   @Public()
   getPersonHaveVector(){
     return this.usersService.testUserHaveUserLocalBefore();
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 
 }

@@ -14,7 +14,7 @@ services:
   mongodb:
     image: mongo:5.0
     ports:
-      - 27019:27017
+      - 27018:27017
     volumes:
       - ~/apps/mongo:/data/db
     environment:

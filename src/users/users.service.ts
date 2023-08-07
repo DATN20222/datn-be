@@ -41,14 +41,17 @@ export class UsersService {
 
   async getOneOrderById(id: string) {
     const user = await this.userModel.findById(id).exec();
-    let events = user.history.sort(
-      (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
-    );
-    for (var item of events){
-      item.cameraId = (await this.cameraService.findOneWithOut(item.cameraId)).name;
+    if (user.history != null && user.history.length != 0){
+      let events = user.history.sort(
+        (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
+      );
+      for (var item of events){
+        item.cameraId = (await this.cameraService.findOneWithOut(item.cameraId)).name;
+      }
+      
+      user.history = events;
     }
     
-    user.history = events;
     return user;
   }
 
@@ -906,5 +909,9 @@ export class UsersService {
       );
     }
 
+  }
+
+  async deleteUser(id: string){
+    return await this.userModel.findByIdAndDelete(id).exec();
   }
 }
