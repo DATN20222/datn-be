@@ -462,7 +462,7 @@ export class UsersService {
           vectors: {
             cameraId: dto.cameraId,
             userId: dto.userId,
-            vector: dto.vector[0]
+            vector: dto.vector
           },
         },
       })
@@ -780,6 +780,7 @@ export class UsersService {
                   user._id,
                 );
                 if (valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR && valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
+
                   console.log("Update vector to DB");
                   await this.updateVector2(
                     {
@@ -891,12 +892,16 @@ export class UsersService {
         }
       }
       
-      if (minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR) await this.updateVector2({
+      if (minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR || minPriorityUser.history.length == 1 || minPriorityUser.history[minPriorityUser.history.length - 1].type == "DOOR" ) {
+        // console.log(newVector);
+        await this.updateVector2({
         cameraId: cameraId,
         userId: userId,
         vector: newVector,
       } as VectorEntity,
       minPriorityUser._id,);
+    }
+
 
       return await this.updateHistoryEvent(
         {

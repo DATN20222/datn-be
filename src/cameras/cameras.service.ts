@@ -150,6 +150,7 @@ export class CamerasService {
         //   updateCameraDto.timeStamp,
         //   updateCameraDto.position
         // );
+        // console.log(updateCameraDto.vector);
         return this.userService.progressType2In2107(
           updateCameraDto.vector,
           ip,
