@@ -22,4 +22,10 @@ export class AuthController {
   async currentUser(@CurrentUser() user: User) {
     return user;
   }
+
+  @Get('/user')
+  @ApiBearerAuth()
+  async getInfor(@CurrentUser() user: User){
+    return this.authService.getForUser(user);
+  }
 }

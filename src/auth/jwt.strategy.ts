@@ -10,6 +10,7 @@ export class JwtPayload {
   code!:number;
   role!: string;
   email!:string;
+  birthday: Date;
 }
 
 @Injectable()

@@ -66,7 +66,7 @@ export class UsersController {
   @ApiBearerAuth()
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   changePermission(@Param('id') id: string, @Body() body: ChangePermissionDto) {
-    return this.usersService.changePermission(id, body.role);
+    return this.usersService.changePermission(id, body.role, body.code);
   }
 
   @Get()

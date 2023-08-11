@@ -41,7 +41,7 @@ export class UsersService {
 
   async getOneOrderById(id: string) {
     const user = await this.userModel.findById(id).exec();
-    if (user.history != null && user.history.length != 0){
+    if (user != null && user.history != null && user.history.length != 0){
       let events = user.history.sort(
         (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
       );
@@ -63,13 +63,13 @@ export class UsersService {
     // check if phone exist
     await this.userModel
       .exists({
-        $or: [{ phone: dto.phone }, { email: dto.email }],
+        $or: [{ phone: dto.phone }, { email: dto.email },],
       })
       .exec()
       .then((exist) => {
         if (exist != null)
           throw new BadRequestException(
-            `Số điện thoại hoặc email không tồn tại!`,
+            `Số điện thoại hoặc email đã tồn tại!`,
           );
       });
 
@@ -80,13 +80,13 @@ export class UsersService {
   async createNewUserByAdmin(dto: AddUserByAdminDto) {
     await this.userModel
       .exists({
-        $or: [{ phone: dto.phone }, { email: dto.email }],
+        $or: [{ phone: dto.phone }, { email: dto.email }, {code: dto.code}],
       })
       .exec()
       .then((exist) => {
         if (exist != null)
           throw new BadRequestException(
-            `Số điện thoại hoặc email không tồn tại!`,
+            `Số điện thoại hoặc email, mã vân tay đã tồn tại!`,
           );
       });
     dto.password = await bcrypt.hash(dto.password, 10);
@@ -106,12 +106,13 @@ export class UsersService {
     return await user.save();
   }
 
-  async changePermission(id: string, role: Role) {
+  async changePermission(id: string, role: Role, code: number) {
     return this.userModel
       .findByIdAndUpdate(
         id,
         {
           role: role,
+          code: code
         },
         { new: true },
       )
