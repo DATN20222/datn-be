@@ -53,6 +53,21 @@ export class CamerasService {
     return await this.cameraModel.findById(id).exec();
   }
 
+  async findAndPopulated(ip: string){
+    const camera = await this.cameraModel.findOne({ ip: ip }).exec();
+    if (camera != null && camera.checkIn != null && camera.checkIn.length != 0){
+      let listCheckIn = camera.checkIn;
+      for (var item of listCheckIn){
+        const user = await this.userService.getOneById(item.userId);
+        if (user != null){
+          item.userId = user.name;
+        } else item.userId = "UNKNOWN";
+      }
+      camera.checkIn = listCheckIn;
+    }
+    return camera;
+  }
+
   async findOneWithOut(ip: string){
     return await this.cameraModel.findOne({ ip: ip }).select('name').exec();
   }

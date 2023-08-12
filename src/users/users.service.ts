@@ -920,4 +920,33 @@ export class UsersService {
   async deleteUser(id: string){
     return await this.userModel.findByIdAndDelete(id).exec();
   }
+
+  async getHistory(id: string, start: Date, end: Date){
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+    const newEvents: HistoryEntity[] = [];
+    const user = await this.userModel.findById(id).exec();
+    if (user != null && user.history != null && user.history.length != 0){
+      // eslint-disable-next-line prefer-const
+      let events = user.history.sort(
+        (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
+      );
+      if (events != null && events.length != 0) {
+        events.map((value) => {
+          const event = value as HistoryEntity;
+          if (
+            event.timeStamp != null &&
+            event.timeStamp.getTime() > startTime &&
+            event.timeStamp.getTime() < endTime
+          ) {
+            newEvents.push(value);
+          }
+        });
+      }
+      for (var value of newEvents){
+        value.cameraId = (await this.cameraService.findOneWithOut(value.cameraId)).name;
+      }
+    }
+    return newEvents;
+  }
 }

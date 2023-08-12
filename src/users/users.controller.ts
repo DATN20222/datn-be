@@ -119,4 +119,11 @@ export class UsersController {
     return this.usersService.deleteUser(id);
   }
 
+  @Get('/history/:id/:start/:end')
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  getListHistoryInDate(@Param('id') id: string, @Param('start') start: Date, @Param('end') end: Date) {
+    return this.usersService.getHistory(id, start, end);
+  }
+
 }

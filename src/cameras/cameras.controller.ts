@@ -89,8 +89,8 @@ export class CamerasController {
   }
 
   
-  // @Get('test/:id')
-  // getd(@Param('id') id:string){
-  //   return this.camerasService.findOneWithOut(id);
-  // }
+  @Get('door/:ip')
+  getd(@Param('ip') ip:string){
+    return this.camerasService.findAndPopulated(ip);
+  }
 }
