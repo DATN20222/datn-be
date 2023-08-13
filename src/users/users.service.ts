@@ -658,6 +658,7 @@ export class UsersService {
                 this.convertBase64ToVector(vectorItem),
                 this.convertBase64ToVector(newVector),
               );
+              console.log(valueDistance);
               if (valueDistance < Threshold.THRESHOLD_MATCH) {
                 await this.updateHistoryEvent(
                   {
@@ -932,6 +933,7 @@ export class UsersService {
                 this.convertBase64ToVector(vectorItem),
                 this.convertBase64ToVector(newVector),
               );
+              console.log(valueDistance.toString());
               if (valueDistance < Threshold.THRESHOLD_MATCH) {
                 await this.updateHistoryEvent(
                   {
