@@ -6,7 +6,7 @@ services:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin
     volumes:
-      - '/Users/quynh/Documents/PROJECT/datn-be/create-data/rabbitmq/:/var/lib/rabbitmq'
+      - '/rabbitmq/:/var/lib/rabbitmq'
     ports:
       - '5672:5672'
       - '15672:15672'

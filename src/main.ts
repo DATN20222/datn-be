@@ -21,7 +21,7 @@ async function bootstrap() {
       urls: [
         {
           protocol: 'amqp',
-          hostname: 'localhost',
+          hostname: '35.240.159.210',
           port: 5672,
           username: 'admin',
           password: 'admin',
@@ -40,7 +40,7 @@ async function bootstrap() {
       urls: [
         {
           protocol: 'amqp',
-          hostname: 'localhost',
+          hostname: '35.240.159.210',
           port: 5672,
           username: 'admin',
           password: 'admin',
@@ -94,6 +94,6 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   await app.listen(port!);
-  console.log(`Server run in: http://localhost:${port}`);
+  console.log(`Server run in: http://35.240.159.210:${port}`);
 }
 bootstrap();
