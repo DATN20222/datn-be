@@ -315,4 +315,18 @@ export class CamerasService {
     if (!camera)
       throw new BadRequestException('Không tìm thấy camera có địa chỉ ip trên.');
   }
+
+  async deleteCheckInCamera(){
+    await this.cameraModel.updateMany({}, { checkIn: [] }).exec();
+  }
+
+  async deleteEventCamera(){
+    let cameras = await this.cameraModel.find({type: "ROOM"}).exec();
+    for (var camera of cameras){
+      if (camera.event != null && camera.event.length > 300){
+        let event = camera.event.slice(-300);
+        await this.cameraModel.findByIdAndUpdate( camera._id.toString(), {event: event}).exec();
+      }
+    }
+  }
 }
