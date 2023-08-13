@@ -23,6 +23,7 @@ import { User } from './entities/user.entity';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateVectorUser } from './dto/update-vector.dto';
 import { AddUserByAdminDto } from './dto/add-user-by-admin.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('accounts')
 @ApiTags('Account Resource')
@@ -126,4 +127,10 @@ export class UsersController {
     return this.usersService.getHistory(id, start, end);
   }
 
+  @Patch('/admin/:id')
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  updateUserByAdmin(@Param('id') id: string, @Body() updateUser : UpdateUserDto){
+    return this.usersService.updateUserInfoByAdmin(id, updateUser);
+  }
 }

@@ -22,6 +22,7 @@ import { UpdateVectorUser } from './dto/update-vector.dto';
 import { CamerasService } from 'src/cameras/cameras.service';
 import { AddUserByAdminDto } from './dto/add-user-by-admin.dto';
 import { Threshold } from 'src/config/threshold.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -41,17 +42,19 @@ export class UsersService {
 
   async getOneOrderById(id: string) {
     const user = await this.userModel.findById(id).exec();
-    if (user != null && user.history != null && user.history.length != 0){
+    if (user != null && user.history != null && user.history.length != 0) {
       let events = user.history.sort(
         (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
       );
-      for (var item of events){
-        item.cameraId = (await this.cameraService.findOneWithOut(item.cameraId)).name;
+      for (var item of events) {
+        item.cameraId = (
+          await this.cameraService.findOneWithOut(item.cameraId)
+        ).name;
       }
-      
+
       user.history = events;
     }
-    
+
     return user;
   }
 
@@ -63,14 +66,12 @@ export class UsersService {
     // check if phone exist
     await this.userModel
       .exists({
-        $or: [{ phone: dto.phone }, { email: dto.email },],
+        $or: [{ phone: dto.phone }, { email: dto.email }],
       })
       .exec()
       .then((exist) => {
         if (exist != null)
-          throw new BadRequestException(
-            `Số điện thoại hoặc email đã tồn tại!`,
-          );
+          throw new BadRequestException(`Số điện thoại hoặc email đã tồn tại!`);
       });
 
     dto.password = await bcrypt.hash(dto.password, 10);
@@ -80,7 +81,7 @@ export class UsersService {
   async createNewUserByAdmin(dto: AddUserByAdminDto) {
     await this.userModel
       .exists({
-        $or: [{ phone: dto.phone }, { email: dto.email }, {code: dto.code}],
+        $or: [{ phone: dto.phone }, { email: dto.email }, { code: dto.code }],
       })
       .exec()
       .then((exist) => {
@@ -112,7 +113,7 @@ export class UsersService {
         id,
         {
           role: role,
-          code: code
+          code: code,
         },
         { new: true },
       )
@@ -191,25 +192,26 @@ export class UsersService {
   }
 
   async updateHistoryEvent(dto: HistoryDto, id: string) {
-    console.log("Start update history");
+    console.log('Start update history');
     const user = await this.userModel.findById(id).exec();
     if (user == null)
       throw new BadRequestException('Không tìm thấy người dùng.');
     if (user.history && user.history.length > 1) {
       let item = user.history[user.history.length - 1];
       const preItem = user.history[user.history.length - 2];
-      if (dto.cameraId == item.cameraId && dto.position == item.position) return await user.save();
+      if (dto.cameraId == item.cameraId && dto.position == item.position)
+        return await user.save();
       if (
         preItem.cameraId == item.cameraId &&
         dto.cameraId == item.cameraId &&
         -item.timeStamp.getTime() + dto.timeStamp.getTime() < 10000 &&
         this.haveDifferentPositionVector(dto.position, item.position)
       ) {
-        console.log("Update last event");
+        console.log('Update last event');
         user.history[user.history.length - 1].timeStamp = dto.timeStamp;
         user.history[user.history.length - 1].position = dto.position;
       } else {
-        console.log("Add event");
+        console.log('Add event');
         user.history.push(dto);
       }
     } else {
@@ -231,25 +233,37 @@ export class UsersService {
 
   async updateVectorDoor(dto: VectorEntity, id: string, timeStamp: Date) {
     const user = await this.userModel.findById(id).exec();
-    console.log(user);
-    if (user == null)
-      throw new BadRequestException('Không tìm thấy người dùng.');
-    const camera = await this.cameraService.findOneByIp(dto.cameraId);
-    if (!camera)
-      throw new BadRequestException('Không tìm thấy camera có địa chỉ ip trên');
-    if (camera.type == 'DOOR') {
-      await this.cameraService.updateCheckInCamera(dto.cameraId, user._id, timeStamp);
-      return await this.userModel
-        .findByIdAndUpdate(id, {
-          $set: {
-            updateTime: timeStamp,
-          },
-          $push: {
-            vectors: dto,
-            history: { cameraId: dto.cameraId, timeStamp: timeStamp, userId: dto.userId, type: "DOOR" },
-          },
-        })
-        .exec();
+    // console.log(user);
+    if (user != null) {
+      const camera = await this.cameraService.findOneByIp(dto.cameraId);
+      if (!camera)
+        throw new BadRequestException(
+          'Không tìm thấy camera có địa chỉ ip trên',
+        );
+      if (camera.type == 'DOOR') {
+        await this.cameraService.updateCheckInCamera(
+          dto.cameraId,
+          user._id,
+          timeStamp,
+        );
+        return await this.userModel
+          .findByIdAndUpdate(id, {
+            $set: {
+              updateTime: timeStamp,
+            },
+            $push: {
+              vectors: dto,
+              history: {
+                cameraId: dto.cameraId,
+                timeStamp: timeStamp,
+                userId: dto.userId,
+                type: 'DOOR',
+              },
+            },
+          })
+          .exec();
+      }
+
       // user.vectors.push(dto);
       // user.history.push({ cameraId: dto.cameraId, timeStamp: new Date(), userId: dto.userId } as HistoryEntity);
       // return await user.save();
@@ -339,7 +353,7 @@ export class UsersService {
                   vector: newVector,
                 } as VectorEntity,
                 element._id,
-                timeStamp
+                timeStamp,
               );
               return await this.updateHistoryEvent(
                 {
@@ -433,23 +447,40 @@ export class UsersService {
     var normalUsers = [];
     var secondPriorityUsers = [];
     for (var item = 0; item < users.length; item++) {
-      if  (users[item].updateTime.getTime() > (timeStamp.getTime() - Threshold.TIME_LOG_IN_FOR_FIRST_PRIORITY )
-        ||
+      if (
+        users[item].updateTime.getTime() >
+          timeStamp.getTime() - Threshold.TIME_LOG_IN_FOR_FIRST_PRIORITY ||
         (users[item].history &&
           users[item].history.length > 0 &&
           users[item].history[users[item].history.length - 1].position &&
-          users[item].history[users[item].history.length - 1].timeStamp.getTime() > timeStamp.getTime() - Threshold.TIME_OUT_MAX_FOR_FIRST_PRIORITY && users[item].history[users[item].history.length - 1].timeStamp.getTime() < timeStamp.getTime() - Threshold.TIME_OUT_FOR_FIRST_PRIORITY &&
-          this.isEdgeFramePosition(users[item].history[users[item].history.length - 1].position))
+          users[item].history[
+            users[item].history.length - 1
+          ].timeStamp.getTime() >
+            timeStamp.getTime() - Threshold.TIME_OUT_MAX_FOR_FIRST_PRIORITY &&
+          users[item].history[
+            users[item].history.length - 1
+          ].timeStamp.getTime() <
+            timeStamp.getTime() - Threshold.TIME_OUT_FOR_FIRST_PRIORITY &&
+          this.isEdgeFramePosition(
+            users[item].history[users[item].history.length - 1].position,
+          ))
       ) {
         priorityUsers.push(users[item]);
-      } 
-      else if (users[item].history &&
+      } else if (
+        users[item].history &&
         users[item].history.length > 0 &&
         users[item].history[users[item].history.length - 1].position &&
-        users[item].history[users[item].history.length - 1].timeStamp.getTime() > timeStamp.getTime() - Threshold.TIME_MAX_FOR_SECOND_PRIORITY && users[item].history[users[item].history.length - 1].timeStamp.getTime() < timeStamp.getTime() - Threshold.TIME_MIN_FOR_SECOND_PRIORITY){
+        users[item].history[
+          users[item].history.length - 1
+        ].timeStamp.getTime() >
+          timeStamp.getTime() - Threshold.TIME_MAX_FOR_SECOND_PRIORITY &&
+        users[item].history[
+          users[item].history.length - 1
+        ].timeStamp.getTime() <
+          timeStamp.getTime() - Threshold.TIME_MIN_FOR_SECOND_PRIORITY
+      ) {
         secondPriorityUsers.push(users[item]);
-      }
-      else {
+      } else {
         normalUsers.push(users[item]);
       }
     }
@@ -463,7 +494,7 @@ export class UsersService {
           vectors: {
             cameraId: dto.cameraId,
             userId: dto.userId,
-            vector: dto.vector
+            vector: dto.vector,
           },
         },
       })
@@ -477,7 +508,7 @@ export class UsersService {
     timeStamp: Date,
     position: string,
   ) {
-    console.log("ProgressType2");
+    console.log('ProgressType2');
     // so sanh local id
     console.log(userId);
     // const today = new Date();
@@ -487,7 +518,7 @@ export class UsersService {
         history: {
           $elemMatch: {
             cameraId: cameraId,
-            userId: userId
+            userId: userId,
           },
         },
       })
@@ -504,27 +535,26 @@ export class UsersService {
         userHaveLocal._id,
       );
     }
-    console.log("Start compare vector");
+    console.log('Start compare vector');
     //so sanh vector
 
     if (newVector == null || newVector.length == 0) return;
-    const { priorityUsers,secondPriorityUsers, normalUsers } = await this.getListUserPriority(timeStamp);
-    console.log("Priority");
+    const { priorityUsers, secondPriorityUsers, normalUsers } =
+      await this.getListUserPriority(timeStamp);
+    console.log('Priority');
     console.log(priorityUsers);
     // console.log(normalUsers);
-    
-    if (priorityUsers.length == 0){
-      console.log("Second");
+
+    if (priorityUsers.length == 0) {
+      console.log('Second');
       console.log(secondPriorityUsers);
-      if (secondPriorityUsers.length > 0){
-    
-        for (var item = 0; item < secondPriorityUsers.length; item++){
+      if (secondPriorityUsers.length > 0) {
+        for (var item = 0; item < secondPriorityUsers.length; item++) {
           const user = secondPriorityUsers[item];
-         
+
           if (user.vectors && user.vectors.length > 0) {
-            
             for (var i = 0; i < user.vectors.length; i++) {
-              console.log("test");
+              console.log('test');
               // console.log(user.vectors[i].vector);
               const vectorItem = user.vectors[i].vector;
               const valueDistance = this.cosineSimilarity(
@@ -542,7 +572,10 @@ export class UsersService {
                   } as HistoryEntity,
                   user._id,
                 );
-                if (valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR && valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
+                if (
+                  valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+                  valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+                ) {
                   // console.log(newVector);
                   await this.updateVector2(
                     {
@@ -560,10 +593,10 @@ export class UsersService {
         }
       }
     }
-    if (priorityUsers.length > 0 ) {
+    if (priorityUsers.length > 0) {
       var minPriorityUser = priorityUsers[0];
       var minPriorityValue = 1;
-      console.log("test priority");
+      console.log('test priority');
       for (var item = 0; item < priorityUsers.length; item++) {
         const user = priorityUsers[item];
         console.log(user);
@@ -592,7 +625,10 @@ export class UsersService {
             if (valueDistance < minUser) minUser = valueDistance;
           }
           if (isMatch) {
-            if (minUser > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minUser < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
+            if (
+              minUser > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+              minUser < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+            ) {
               console.log(newVector);
               await this.updateVector2(
                 {
@@ -612,8 +648,8 @@ export class UsersService {
           }
         }
       }
-      if (secondPriorityUsers.length > 0){
-        for (var item = 0; item < secondPriorityUsers.length; item++){
+      if (secondPriorityUsers.length > 0) {
+        for (var item = 0; item < secondPriorityUsers.length; item++) {
           const user = secondPriorityUsers[item];
           if (user.vectors && user.vectors.length > 0) {
             for (var index = 0; index < user.vectors; index++) {
@@ -632,7 +668,10 @@ export class UsersService {
                   } as HistoryEntity,
                   user._id,
                 );
-                if (valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR && valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
+                if (
+                  valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+                  valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+                ) {
                   console.log(newVector);
                   await this.updateVector2(
                     {
@@ -649,13 +688,19 @@ export class UsersService {
           }
         }
       }
-      
-      if (minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR) await this.updateVector2({
-        cameraId: cameraId,
-        userId: userId,
-        vector: newVector,
-      } as VectorEntity,
-      minPriorityUser._id,);
+
+      if (
+        minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+        minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+      )
+        await this.updateVector2(
+          {
+            cameraId: cameraId,
+            userId: userId,
+            vector: newVector,
+          } as VectorEntity,
+          minPriorityUser._id,
+        );
 
       return await this.updateHistoryEvent(
         {
@@ -667,39 +712,55 @@ export class UsersService {
         minPriorityUser._id,
       );
     }
-
   }
 
-
-  isFirstPriorityUser(user: User, timeStamp: Date){
-    if (user.updateTime.getTime() > timeStamp.getTime() - Threshold.TIME_LOG_IN_FOR_FIRST_PRIORITY){
+  isFirstPriorityUser(user: User, timeStamp: Date) {
+    if (
+      user.updateTime.getTime() >
+      timeStamp.getTime() - Threshold.TIME_LOG_IN_FOR_FIRST_PRIORITY
+    ) {
       if (user.history == null || user.history.length <= 1) return true;
       // return  !((user.history[user.history.length - 1].type == null)||(user.history[user.history.length - 1].type == undefined) || (user.history[user.history.length - 1].type != "DOOR"));
-      if (user.history[user.history.length - 1].type != null && user.history[user.history.length - 1].type == "DOOR") return true;
-    } 
-    return (user.history && user.history.length > 1 && user.history[user.history.length - 1].position &&
+      if (
+        user.history[user.history.length - 1].type != null &&
+        user.history[user.history.length - 1].type == 'DOOR'
+      )
+        return true;
+    }
+    return (
+      user.history &&
+      user.history.length > 1 &&
+      user.history[user.history.length - 1].position &&
       user.history[user.history.length - 1].type == null &&
-      user.history[user.history.length - 1].timeStamp.getTime() > timeStamp.getTime() - Threshold.TIME_OUT_MAX_FOR_FIRST_PRIORITY && user.history[user.history.length - 1].timeStamp.getTime() < timeStamp.getTime() - Threshold.TIME_OUT_FOR_FIRST_PRIORITY && this.isEdgeFramePosition(user.history[user.history.length - 1].position));
+      user.history[user.history.length - 1].timeStamp.getTime() >
+        timeStamp.getTime() - Threshold.TIME_OUT_MAX_FOR_FIRST_PRIORITY &&
+      user.history[user.history.length - 1].timeStamp.getTime() <
+        timeStamp.getTime() - Threshold.TIME_OUT_FOR_FIRST_PRIORITY &&
+      this.isEdgeFramePosition(user.history[user.history.length - 1].position)
+    );
   }
-  
-  isSecondPriorityUser(user: User, timeStamp: Date){
-    return (user.history &&
-    user.history.length > 0 &&
-    user.history[user.history.length - 1].timeStamp.getTime() > timeStamp.getTime() - Threshold.TIME_MAX_FOR_SECOND_PRIORITY && user.history[user.history.length - 1].timeStamp.getTime() < timeStamp.getTime() - Threshold.TIME_MIN_FOR_SECOND_PRIORITY);
+
+  isSecondPriorityUser(user: User, timeStamp: Date) {
+    return (
+      user.history &&
+      user.history.length > 0 &&
+      user.history[user.history.length - 1].timeStamp.getTime() >
+        timeStamp.getTime() - Threshold.TIME_MAX_FOR_SECOND_PRIORITY &&
+      user.history[user.history.length - 1].timeStamp.getTime() <
+        timeStamp.getTime() - Threshold.TIME_MIN_FOR_SECOND_PRIORITY
+    );
   }
-  async getListProrityUserIn2107(timeStamp: Date){
+  async getListProrityUserIn2107(timeStamp: Date) {
     const users = (await this.getAllUser()) ?? [];
     var priorityUsers = [];
     var normalUsers = [];
     var secondPriorityUsers = [];
     for (var item = 0; item < users.length; item++) {
-      if (this.isFirstPriorityUser(users[item], timeStamp)){
+      if (this.isFirstPriorityUser(users[item], timeStamp)) {
         priorityUsers.push(users[item]);
-      } 
-      else if (this.isSecondPriorityUser(users[item], timeStamp)){
+      } else if (this.isSecondPriorityUser(users[item], timeStamp)) {
         secondPriorityUsers.push(users[item]);
-      }
-      else {
+      } else {
         normalUsers.push(users[item]);
       }
     }
@@ -713,25 +774,25 @@ export class UsersService {
     timeStamp: Date,
     position: string,
   ) {
-    console.log("Start progress type 2");
+    console.log('Start progress type 2');
     // so sanh local id
     console.log(timeStamp);
-    console.log("UserId: " + userId);
-    
+    console.log('UserId: ' + userId);
+
     // const tomorrow = new Date(today.getDate() + 1);
     const userHaveLocal = await this.userModel
       .findOne({
         history: {
           $elemMatch: {
             cameraId: cameraId,
-            userId: userId
+            userId: userId,
           },
         },
       })
       .exec();
 
     if (userHaveLocal != null || userHaveLocal != undefined) {
-      console.log("Have local user before");
+      console.log('Have local user before');
       return await this.updateHistoryEvent(
         {
           cameraId: cameraId,
@@ -742,26 +803,27 @@ export class UsersService {
         userHaveLocal._id,
       );
     }
-    console.log("Start compare vector");
+    console.log('Start compare vector');
     //so sanh vector
 
     if (newVector == null || newVector.length == 0) return;
-    const { priorityUsers,secondPriorityUsers, normalUsers } = await this.getListProrityUserIn2107(timeStamp);
-    console.log("Number Priority User");
+    const { priorityUsers, secondPriorityUsers, normalUsers } =
+      await this.getListProrityUserIn2107(timeStamp);
+    console.log('Number Priority User');
     console.log(priorityUsers.length);
     // console.log(normalUsers);
-    
-    if (priorityUsers.length == 0){
-      console.log("Second Number");
+
+    if (priorityUsers.length == 0) {
+      console.log('Second Number');
       console.log(secondPriorityUsers.length);
-      if (secondPriorityUsers.length > 0){
-        console.log("Scan in second priority user");
-        for (var item = 0; item < secondPriorityUsers.length; item++){
+      if (secondPriorityUsers.length > 0) {
+        console.log('Scan in second priority user');
+        for (var item = 0; item < secondPriorityUsers.length; item++) {
           const user = secondPriorityUsers[item];
-          console.log("Scan in user have code "+ user.code.toString());
+          console.log('Scan in user have code ' + user.code.toString());
           if (user.vectors && user.vectors.length > 0) {
             for (var i = 0; i < user.vectors.length; i++) {
-              console.log("Scan vector stt "+ i.toString());
+              console.log('Scan vector stt ' + i.toString());
               // console.log(user.vectors[i].vector);
               const vectorItem = user.vectors[i].vector;
               const valueDistance = this.cosineSimilarity(
@@ -770,7 +832,7 @@ export class UsersService {
               );
               console.log(valueDistance);
               if (valueDistance < Threshold.THRESHOLD_MATCH) {
-                console.log("Match vector" + user.code.toString());
+                console.log('Match vector' + user.code.toString());
                 await this.updateHistoryEvent(
                   {
                     cameraId: cameraId,
@@ -780,9 +842,11 @@ export class UsersService {
                   } as HistoryEntity,
                   user._id,
                 );
-                if (valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR && valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
-
-                  console.log("Update vector to DB");
+                if (
+                  valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+                  valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+                ) {
+                  console.log('Update vector to DB');
                   await this.updateVector2(
                     {
                       cameraId: cameraId,
@@ -800,19 +864,19 @@ export class UsersService {
       }
     }
 
-    console.log("Check in priority users");
-    if (priorityUsers.length > 0 ) {
+    console.log('Check in priority users');
+    if (priorityUsers.length > 0) {
       var minPriorityUser = priorityUsers[0];
       var minPriorityValue = 1;
-      console.log("Init priority check");
+      console.log('Init priority check');
       for (var v = 0; v < priorityUsers.length; v++) {
         const user = priorityUsers[v];
-        console.log("Scan in user have code "+ user.code.toString());
+        console.log('Scan in user have code ' + user.code.toString());
         var minUser = 1;
         var isMatch = false;
         if (user.vectors && user.vectors.length > 0) {
           for (var index = 0; index < user.vectors.length; index++) {
-            console.log("Scan vector stt "+ index.toString());
+            console.log('Scan vector stt ' + index.toString());
             const vectorItem = user.vectors[index].vector;
             const valueDistance = this.cosineSimilarity(
               this.convertBase64ToVector(vectorItem),
@@ -820,7 +884,7 @@ export class UsersService {
             );
             console.log(valueDistance);
             if (valueDistance < Threshold.THRESHOLD_MATCH && !isMatch) {
-              console.log("Macth user" + user.code.toString());
+              console.log('Macth user' + user.code.toString());
               await this.updateHistoryEvent(
                 {
                   cameraId: cameraId,
@@ -835,8 +899,11 @@ export class UsersService {
             if (valueDistance < minUser) minUser = valueDistance;
           }
           if (isMatch) {
-            if (minUser > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minUser < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
-              console.log("Save vector to DB in Priority");
+            if (
+              minUser > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+              minUser < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+            ) {
+              console.log('Save vector to DB in Priority');
               await this.updateVector2(
                 {
                   cameraId: cameraId,
@@ -855,8 +922,8 @@ export class UsersService {
           }
         }
       }
-      if (secondPriorityUsers.length > 0){
-        for (var item = 0; item < secondPriorityUsers.length; item++){
+      if (secondPriorityUsers.length > 0) {
+        for (var item = 0; item < secondPriorityUsers.length; item++) {
           const user = secondPriorityUsers[item];
           if (user.vectors && user.vectors.length > 0) {
             for (var index = 0; index < user.vectors; index++) {
@@ -875,8 +942,11 @@ export class UsersService {
                   } as HistoryEntity,
                   user._id,
                 );
-                if (valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR && valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR){
-                  console.log("Update Vector");
+                if (
+                  valueDistance > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+                  valueDistance < Threshold.MAX_THRESHOLD_SAVE_VECTOR
+                ) {
+                  console.log('Update Vector');
                   await this.updateVector2(
                     {
                       cameraId: cameraId,
@@ -892,17 +962,24 @@ export class UsersService {
           }
         }
       }
-      
-      if (minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR && minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR || minPriorityUser.history.length == 1 || minPriorityUser.history[minPriorityUser.history.length - 1].type == "DOOR" ) {
-        // console.log(newVector);
-        await this.updateVector2({
-        cameraId: cameraId,
-        userId: userId,
-        vector: newVector,
-      } as VectorEntity,
-      minPriorityUser._id,);
-    }
 
+      if (
+        (minPriorityValue > Threshold.MIN_THRESHOLD_SAVE_VECTOR &&
+          minPriorityValue < Threshold.MAX_THRESHOLD_SAVE_VECTOR) ||
+        minPriorityUser.history.length == 1 ||
+        minPriorityUser.history[minPriorityUser.history.length - 1].type ==
+          'DOOR'
+      ) {
+        // console.log(newVector);
+        await this.updateVector2(
+          {
+            cameraId: cameraId,
+            userId: userId,
+            vector: newVector,
+          } as VectorEntity,
+          minPriorityUser._id,
+        );
+      }
 
       return await this.updateHistoryEvent(
         {
@@ -914,19 +991,18 @@ export class UsersService {
         minPriorityUser._id,
       );
     }
-
   }
 
-  async deleteUser(id: string){
+  async deleteUser(id: string) {
     return await this.userModel.findByIdAndDelete(id).exec();
   }
 
-  async getHistory(id: string, start: Date, end: Date){
+  async getHistory(id: string, start: Date, end: Date) {
     const startTime = start.getTime();
     const endTime = end.getTime();
     const newEvents: HistoryEntity[] = [];
     const user = await this.userModel.findById(id).exec();
-    if (user != null && user.history != null && user.history.length != 0){
+    if (user != null && user.history != null && user.history.length != 0) {
       // eslint-disable-next-line prefer-const
       let events = user.history.sort(
         (a, b) => -a.timeStamp.getTime() + b.timeStamp.getTime(),
@@ -943,10 +1019,16 @@ export class UsersService {
           }
         });
       }
-      for (var value of newEvents){
-        value.cameraId = (await this.cameraService.findOneWithOut(value.cameraId)).name;
+      for (var value of newEvents) {
+        value.cameraId = (
+          await this.cameraService.findOneWithOut(value.cameraId)
+        ).name;
       }
     }
     return newEvents;
+  }
+
+  async updateUserInfoByAdmin(id: string, updateUser: UpdateUserDto ){
+    return await this.userModel.findByIdAndUpdate(id, updateUser).exec();
   }
 }
