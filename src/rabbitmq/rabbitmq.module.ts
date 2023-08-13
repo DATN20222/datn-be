@@ -30,7 +30,7 @@ import { UsersModule } from 'src/users/users.module';
           urls: [
             {
               protocol: 'amqp',
-              hostname: 'localhost',
+              hostname: '35.240.159.210',
               port: 5672,
               username: 'admin',
               password: 'admin',
@@ -55,7 +55,7 @@ import { UsersModule } from 'src/users/users.module';
           urls: [
             {
               protocol: 'amqp',
-              hostname: 'localhost',
+              hostname: '35.240.159.210',
               port: 5672,
               username: 'admin',
               password: 'admin',
@@ -77,4 +77,4 @@ import { UsersModule } from 'src/users/users.module';
   controllers: [RabbitmqController],
   exports: [RabbitmqService],
 })
-export class RabbitmqModule {}
+export class RabbitmqModule { }
